@@ -5,17 +5,27 @@
 **Module:** COMP3015 – Games Graphics Pipelines  
 **Module Leader:** Dr Ji-Jian Chin  
 **Repository:** https://github.com/Harrisonscott9970/OpenGl-BlackholeCW2  
-**Video Demo:** [your YouTube URL]
+**Video Demo:** [insert YouTube URL]
 
 ---
 
 ## Project Overview
 
-TON 618: Stellar Expedition is an OpenGL / GLSL real-time graphics application created for COMP3015 CW2. It is a direct evolution of the CW1 black hole scene, rebuilt from the ground up around seven advanced rendering features from Weeks 5–10 of the module.
+TON 618: Stellar Expedition is a real-time OpenGL / GLSL graphics project created for COMP3015 CW2.
 
-The player pilots a spacecraft in orbit around TON 618 — a supermassive black hole. The objective is to fly out from the home platform, collect energy cells from four zone types of satellite platform (HomeRelay, StableRelay, DamagedRelay, HazardRelay), and return safely before the black hole consumes you.
+The project extends my CW1 black hole scene into a more complete interactive experience built around multiple advanced rendering techniques from Weeks 5–10 of the module. The player pilots a spacecraft near TON 618, leaves the ship in EVA mode to recover energy cells from relay platforms, and must return safely before being pulled into the black hole.
 
-The project demonstrates a **full production rendering pipeline**: physically based shading, instanced particle systems, geometry shader ribbon rendering, PCF shadow maps, post-process HDR with filmic tonemapping and bloom, FBM noise-driven motion, and a research-backed gravitational lensing effect — all integrated into a playable game loop with a menu, leaderboard, narrative progression, and cinematic fail sequence.
+The focus of the coursework is the integration of several advanced graphics features into one scene and gameplay loop, including:
+
+- HDR tonemapping and bloom
+- shadow mapping with PCF filtering
+- instanced particles
+- FBM/noise-driven motion
+- Cook-Torrance-style metallic/roughness shading
+- a geometry-shader tether ribbon
+- a research-inspired black hole visualisation effect
+
+These features are combined with HUD systems, menu screens, a tether recovery minigame, score persistence, and cinematic fail / win presentation.
 
 ---
 
@@ -26,26 +36,25 @@ The project demonstrates a **full production rendering pipeline**: physically ba
 | IDE | Visual Studio 2022 |
 | OpenGL Version | 4.3 Core Profile |
 | Template Base | COMP3015 Lab 1 template |
-| Libraries | GLAD, GLFW, GLM, stb\_image, irrKlang |
-
-> **No Assimp dependency.** All geometry (platforms, ship, cell, asteroids, debris) is generated procedurally or loaded through a self-contained OBJ parser (`loadOBJMesh()` in `SceneMeshes.cpp`) using only `std::ifstream`. There are no external model-loading DLLs.
+| Libraries | GLAD, GLFW, GLM, stb_image, irrKlang |
 
 ---
 
-## Submission / Opening Instructions
+## Running the Project
 
-To run the project, either:
+You can run the project in either of these ways:
 
-- go to `CompProject\x64\Debug` and launch `project_template.exe`, or
-- go to `CompProject`, open `project_template.sln`, and run it with **Local Windows Debugger** in Visual Studio.
+- Open `CompProject/project_template.sln` in Visual Studio and run with **Local Windows Debugger**
+- Or run the built executable from `CompProject/x64/Debug/project_template.exe`
 
-The final submission zip includes:
+The submission zip contains:
 
-- the full Visual Studio project
-- the executable version
-- all required assets, shaders, and media files
+- the full Visual Studio solution
+- the executable build
+- all required assets and shaders
 - this README
-- the signed Generative AI declaration form with AI prompt transcripts per feature
+- the signed Generative AI declaration
+- AI prompt / transcript evidence for claimed features
 
 ---
 
@@ -53,268 +62,253 @@ The final submission zip includes:
 
 | Key / Input | Action |
 |---|---|
-| W / A / S / D | Move (cockpit: fly ship / EVA: float) |
+| W / A / S / D | Move |
 | Mouse | Look / aim |
-| **X** | Toggle EVA / cockpit mode |
-| **Left Mouse** | Collect nearby energy cell (EVA only) |
-| **Shift** | Boost (drains boost energy; auto-recharges) |
-| **A / D** (during tether minigame) | Align marker with stability window |
-| **N** | Toggle night-vision mode (phosphor green) |
-| **H** | Toggle HDR tonemapping |
-| **B** | Toggle bloom |
-| **F** | Toggle film mode (grain + scanlines + desaturation) |
-| **Q / E** | Decrease / increase exposure |
-| **G** | Reset mission |
-| **Escape** | Quit |
+| X | Toggle EVA / cockpit mode |
+| Left Mouse | Collect nearby energy cell in EVA mode |
+| Shift | Boost |
+| A / D | Tether minigame input |
+| N | Toggle night-vision mode |
+| H | Toggle HDR |
+| B | Toggle bloom |
+| F | Toggle film mode |
+| Q / E | Exposure down / up |
+| G | Reset mission |
+| Escape | Quit |
 
 ---
 
-## Objective & Game Loop
+## Gameplay Summary
 
-1. Launch from the **home platform** (cyan, at world origin) into open space
-2. Fly to satellite platforms at **ring radii 85 / 180 / 310 units** from the black hole
-3. **Collect all energy cells** (left-click when nearby in EVA mode)
-4. Return the cells to the **home platform** to win
-5. If you drift too far from the ship in EVA mode, the **tether minigame** triggers — press A / D to align the oscilloscope marker and reel yourself back in
-6. If you cross the event horizon, a **cinematic BH-fall sequence** plays (red-shift, tidal vignette, chromatic aberration) before the mission resets
-7. High scores are saved to `scores.txt`; the **leaderboard** shows your top-5 runs
+The gameplay loop is:
+
+1. Start from the home platform
+2. Fly to relay platforms positioned around the black hole
+3. Leave the ship in EVA mode
+4. Collect all energy cells
+5. Return to the home platform to complete the mission
+
+The black hole creates increasing danger as the player moves closer. In EVA mode, drifting too far from the ship triggers a tether recovery minigame. Crossing too close to the black hole triggers a cinematic fail sequence before the mission resets.
+
+Scores are written to `scores.txt`, and the menu includes a leaderboard showing the top recorded runs.
 
 ---
 
 ## Feature Coverage
 
-### Week 5 — HDR Tonemapping + Gaussian Bloom
+## Week 5 — HDR Tonemapping and Bloom
 
-**Files:** `shader/hdr.frag`, `shader/blur.frag`, `scenebasic_uniform.cpp` (`renderBloom()`, `setupHDRFramebuffer()`)
+**Files:** `shader/hdr.frag`, `shader/blur.frag`, `scenebasic_uniform.cpp`
 
-The scene renders entirely into a floating-point HDR framebuffer. A 10-pass separable Gaussian bloom is computed via a ping-pong FBO pair before the final composite. The HDR composite shader (`hdr.frag`) applies:
+The main scene is rendered into a floating-point HDR framebuffer. A separable Gaussian blur is then applied using a ping-pong framebuffer setup to produce bloom before the final composite pass.
 
-- **ACES filmic tonemapping** — Narkowicz (2015) fitted curve constants (a=2.51, b=0.03, c=2.43, d=0.59, e=0.14)
-- Shadow crush and warm highlight push for a deep-space cinematic grade
-- Gentle S-curve contrast
-- Film grain + CRT scanlines (film mode, toggle F)
-- Vignette framing the black hole at screen centre
-- Edge chromatic aberration
-- Dust proximity UV warp + 9-tap weighted scatter blur (`uDustNearby` uniform)
-- Gravitational proximity distortion rings (`uBHProximity`)
-- BH-fall red-shift and tidal vignette (`uBHFallDistort`)
-- Exposure control (Q/E keys)
+The HDR composite shader supports:
 
-> Reference: Narkowicz, K. (2015). *ACES Filmic Tone Mapping Curve.* https://knarkowicz.wordpress.com/2016/01/06/
+- exposure adjustment
+- bloom toggle
+- film-style post-processing
+- vignette
+- grain
+- scanline effects
+- black-hole proximity distortion
+- fail-sequence visual distortion
+
+This gives the project a stronger cinematic look and allows bright effects such as the accretion disk, particles, and pickups to glow more convincingly.
 
 ---
 
-### Week 6 — Geometry Shader Tether Ribbon
+## Week 6 — Geometry Shader Tether Ribbon
 
 **Files:** `shader/tether.vert`, `shader/tether.geom`, `shader/tether.frag`, `SceneTether.cpp`
 
-The EVA tether rope is simulated as a 24-segment Verlet chain (Jakobsen 2001 GDC) on the CPU. The geometry shader extrudes the resulting `GL_LINE_STRIP` into a smooth **camera-facing quad strip**:
+The EVA tether is simulated on the CPU as a segmented rope and rendered with a geometry shader that expands the line into a camera-facing ribbon.
 
-```glsl
-// tether.geom — core billboarding
-vec3 right = normalize(cross(dir, toEye));
-```
-
-The ribbon half-width is driven by `uHalfWidth`, which is animated via `tetherWarning` (0→1 as the player approaches maximum tether distance) so the rope visually pulses orange-red when under tension. The fragment shader applies a glow gradient across the ribbon width.
-
-> Reference: Jakobsen, T. (2001). *Advanced Character Physics.* GDC 2001.
+The tether changes colour and apparent intensity as strain increases, giving the player clear visual feedback when they are close to the maximum tether distance.
 
 ---
 
-### Week 7 — Instanced Particle System (Dual-type)
+## Week 7 — Instanced Particle System
 
 **Files:** `shader/particles.vert`, `shader/particles.frag`, `SceneParticles.cpp`
 
-2,200 billboard quads are drawn in a **single `glDrawArraysInstanced` call**. Each instance carries 7 floats: `spawnPos (xyz)`, `age`, `size`, `seed`, `type`. Billboarding is done in the vertex shader from the camera right/up vectors extracted from the view matrix.
+The particle system is rendered using instancing so that a large number of billboard particles can be drawn efficiently in a single draw call.
 
-**Type 0 — Accretion particles (1,800):**
-- Schwarzschild-inspired gravity term (`pow(age, 1.6)`) pulls the particle toward the black hole as it ages
-- 4-octave FBM turbulence (Perlin 1985) adds lateral swirl
-- Temperature gradient colour: cold blue → orange → white-hot (matches the Keplerian disk profile from James et al. 2015)
+Two main particle roles are used:
 
-**Type 1 — Space dust (400):**
-- Spawned on four concentric distance rings (260 / 420 / 580 / 740 units)
-- Slow volumetric FBM drift, never infalling
-- Additive blending builds a visible blue-grey haze through the playfield
-- Camera proximity (`dustNearbyDensity`) drives the `uDustNearby` HDR overlay
+- particles around the black hole / accretion region
+- drifting space-dust particles throughout the scene
 
-> Reference: Perlin, K. (1985). *An image synthesizer.* SIGGRAPH 1985.
+Particle motion is influenced by age, black hole pull, and noise-based turbulence to make the environment feel more dynamic and less empty.
 
 ---
 
-### Week 8 — Shadow Map (PCF)
+## Week 8 — Shadow Mapping with PCF
 
-**Files:** `shader/shadow_depth.vert`, `shader/shadow_depth.frag`, `shader/platform.frag` (`calcShadow()`), `scenebasic_uniform.cpp` (`setupShadowMap()`, `renderShadowPass()`)
+**Files:** `shader/shadow_depth.vert`, `shader/shadow_depth.frag`, `shader/platform.frag`, `scenebasic_uniform.cpp`
 
-A 4096×4096 depth-only framebuffer is rendered from a directional light before the main pass. The `lightSpaceMatrix` (orthographic light projection × light view) is passed to the platform shader.
+A shadow map is rendered from the light’s point of view before the main scene pass.
 
-The `calcShadow()` function in `platform.frag` performs **5×5 Percentage Closer Filtering (PCF)** — 25 depth comparisons, each offset by a texel, averaged for soft shadow edges. Slope-scaled depth bias (`bias = max(0.005, 0.02 * (1 - NdotL))`) eliminates shadow acne on angled surfaces without over-biasing.
+In the main platform/material shader, Percentage Closer Filtering (PCF) is used to soften the shadow edges and reduce aliasing. A depth bias is also applied to reduce acne and self-shadowing artefacts.
 
-This is the **declared Lecture 5–10 shader** for the pass condition.
-
----
-
-### Week 9 — FBM Noise (Particle Motion + Plasma Turbulence)
-
-**Files:** `shader/particles.vert` (`ptFbm()`), `shader/blackhole.frag`, `shader/disk.frag`
-
-4-octave **value-noise FBM** (`ptFbm()` in `particles.vert`) uses a 2D rotation matrix between octaves to break axis-aligned banding artifacts. The same FBM concept appears in two further shaders:
-
-- `blackhole.frag` — plasma filament distortion around the event horizon
-- `disk.frag` — turbulence overlay on the accretion disk surface
-
-This means the noise technique is applied across three different visual systems rather than a single isolated use.
-
-> Reference: Perlin, K. (1985). *An image synthesizer.* SIGGRAPH 1985.
+This is one of the main advanced features used to satisfy the CW2 requirement.
 
 ---
 
-### Week 9 — Night Vision Mode (Phosphor-Green Image Intensifier)
+## Week 9 — FBM / Noise-Based Motion
 
-**Files:** `shader/hdr.frag` (lines 181–215, `uNightVision` uniform), `scenebasic_uniform.cpp` (N key toggle)
+**Files:** `shader/particles.vert`, `shader/blackhole.frag`, `shader/disk.frag`
 
-A full post-process night-vision pipeline in `hdr.frag`, activated by pressing **N**:
+Noise-based motion is used in multiple parts of the project rather than being isolated to one effect.
 
-1. **ITU-R BT.601 luminance** extraction from the tonemapped frame
-2. **Power-curve amplification** (`pow(lum, 0.55) * 1.30`) — lifts dim sources (deep space, particles) without blowing bright ones, simulating the image-intensifier tube
-3. **P31 phosphor green remap** (peak ~530 nm): `r * 0.14, g * 1.00, b * 0.06`
-4. **Photon shot-noise grain** (`h21` hash, McGuire 2020 JCGT)
-5. **CRT scanlines** (every other pixel row, 4% dimmer)
-6. **Green bloom pass** re-added on bright objects (photon ring, energy cells)
+Examples include:
 
-Skips the dust-haze overlay automatically — NV luminance amplification already makes dust quads dominate without the extra HDR blend.
+- turbulence in the particle system
+- distortion around the black hole visuals
+- animated variation in the accretion disk surface
 
-> Reference: Van Ess, J. (2012). *Real-time Night Vision Rendering.* GPU Pro 3, AK Peters.
+Using noise in several places helped make the scene feel more alive and visually cohesive.
 
 ---
 
-### Week 10 — PBR Cook-Torrance
+## Additional Post-Process Mode — Night Vision
 
-**Files:** `shader/platform.frag` (full PBR BRDF), `SceneMeshes.cpp`, `SceneShip.cpp`, `SceneWorld.cpp`, `scenebasic_uniform.cpp`
+**Files:** `shader/hdr.frag`, `scenebasic_uniform.cpp`
 
-Full **metallic/roughness PBR** in `platform.frag`, applied to all scene geometry. The BRDF consists of:
+A night-vision mode can be toggled during gameplay. This applies a green-tinted image-intensifier style effect in post-processing, with brightness remapping, grain, and scanline treatment.
 
-- **GGX normal distribution** — `D = a² / (π · ((NdotH² · (a²-1) + 1)²))`
-- **Smith-correlated geometry masking-shadowing** — `G = G_SchlickGGX(NdotV) · G_SchlickGGX(NdotL)`
-- **Schlick Fresnel approximation** — `F = F0 + (1 - F0) · (1 - HdotV)⁵`
-- Energy-conserving specular/diffuse split via `kD = (1 - F) · (1 - metallic)`
-
-Per-surface `uMetallic` / `uRoughness` values are sent from C++ for every draw call:
-
-| Surface | Metallic | Roughness | Rationale |
-|---|---|---|---|
-| HomeRelay platform | 0.22 | 0.42 | Maintained aluminium |
-| DamagedRelay platform | 0.06 | 0.82 | Oxidised, corroded |
-| HazardRelay platform | 0.03 | 0.94 | Heavily degraded |
-| StableRelay platform | 0.15 | 0.55 | General station metal |
-| Asteroids | 0.00 | 0.92 | Rock (non-conductive) |
-| Beacon antenna | 0.45 | 0.28 | Polished steel |
-| Debris props | 0.18 | 0.78 | Oxidised scrap |
-| Ship hull | 0.08 | 0.44 | Aerospace ceramic |
+This was added as an extra visual mode to make the project more interactive and to show further control over the post-processing pipeline.
 
 ---
 
-## Advanced Research Feature
+## Week 10 — Cook-Torrance Metallic/Roughness Shading
 
-**Paper:** James, O., von Tunzelmann, E., Franklin, P. and Thorne, K.S. (2015). *Gravitational lensing by spinning black holes in astrophysics, and in the movie Interstellar.* Classical and Quantum Gravity, 32(6), 065001. DOI: 10.1088/0264-9381/32/6/065001
+**Files:** `shader/platform.frag`, `SceneWorld.cpp`, `SceneShip.cpp`, `SceneMeshes.cpp`
 
-Four distinct aspects of the paper are implemented across three shader files:
+The main scene-material shader uses a Cook-Torrance-style metallic/roughness model with:
 
-| Concept from paper | Implementation | Shader |
-|---|---|---|
-| Shadow boundary at critical impact parameter b_crit = 3√3/2 · M | Fragments inside b_crit rendered as the black shadow disk | `blackhole.frag` |
-| Photon ring emission at b ≈ b_crit | Thin bright ring with angular-velocity brightness modulation | `blackhole.frag` |
-| Doppler beaming — approaching side brighter | Asymmetric ring brightness based on orbital direction | `blackhole.frag` |
-| Keplerian temperature gradient T ∝ r^{−3/4} | Cold blue → orange → white-hot particle colour ramp matching paper Fig. 2 Stefan-Boltzmann profile | `particles.frag` |
-| Gravitational light bending | Screen-space UV warp approximating Schwarzschild radius deflection | `blackhole.frag` |
+- GGX normal distribution
+- Schlick Fresnel approximation
+- Smith-style geometry term
+
+Different material settings are assigned to different scene objects so that platforms, debris, the ship, and asteroids respond differently to light.
+
+This improves the material appearance compared with a simpler Blinn-Phong-only approach.
 
 ---
 
-## Aesthetics
+## Research-Inspired Black Hole Visualisation
 
-- **Cinematic ACES grade** — deep-black crush, warm orange highlights on the disk, cold interstellar space tones
-- **Animated main menu** — CPU-rasterized rotating black hole with Doppler beaming, twinkling star field, pulsing title text, leaderboard and settings pages
-- **Loading screen** — animated spaceship riding a progress bar with step-reveal loading messages
-- **BH-fall cinematic** — extreme chromatic aberration, red-shift, and tidal edge vignette ramp over 4 seconds
-- **Space-dust haze** — flying through dust clouds produces a cold blue-grey screen-space blur and scatter overlay
-- **Zone visual identity** — HomeRelay (cyan), StableRelay (blue-cyan), DamagedRelay (orange), HazardRelay (red) with per-type glow and debris density
-- **Dust cluster HUD markers** — compass-style indicators point to the nearest dust cloud positions computed each frame from the particle system
+**Files:** `shader/blackhole.frag`, `shader/disk.frag`, `shader/particles.frag`
+
+The black hole visuals are informed by black hole rendering research and by cinematic visual references such as *Interstellar*.
+
+The implementation is a **real-time stylised approximation**, not a physically exact simulation. The shader focuses on effects such as:
+
+- a dark shadow region
+- a bright photon-ring style highlight
+- asymmetric brightness / colour emphasis
+- screen-space distortion of the background
+
+The aim was to create a recognisable and convincing black hole effect within the constraints of real-time coursework rendering.
 
 ---
 
 ## Gamification
 
-| Element | Implementation |
-|---|---|
-| **Objective** | Collect all energy cells from satellite platforms and return to the home platform |
-| **Zone types** | 4 archetypes — HomeRelay / StableRelay / DamagedRelay / HazardRelay — with distinct visual identity, debris density, and danger bias |
-| **Tether minigame** | Oscilloscope rhythm mechanic: align a sweeping marker with the stability window; hit window narrows with each press; 3 successes reels player to ship |
-| **Danger system** | `dangerLevel` (0→1) scales particle brightness, exposure, BH-pull, and HDR distortion as player approaches the black hole |
-| **Boost mechanic** | Shift-boost with drain/recharge cycle; auto-locks after depletion until 25% recovered |
-| **Fail state** | Crossing event horizon triggers 4-second red-shift cinematic then mission reset |
-| **Win state** | Returning all cells to home platform — score saved to `scores.txt` |
-| **Score + combo** | Score per cell; combo multiplier for rapid collections |
-| **High-score persistence** | `scores.txt` stores top-5 entries; leaderboard page on main menu |
-| **Narrative** | 5-stage HELIO ARRAY COLLAPSE story shown as HUD overlays at score thresholds |
-| **Time dilation** | `timeDilationFactor` scales difficulty tier dynamically with proximity and score |
+The project is designed as a playable scene rather than a static graphics demo.
+
+Implemented gameplay elements include:
+
+- mission objective: collect all energy cells and return
+- multiple relay platform types
+- EVA / cockpit mode switching
+- tether danger and recovery minigame
+- boost resource management
+- fail state and reset sequence
+- score saving and leaderboard
+- staged HUD messaging / narrative progression
+
+These mechanics help connect the rendering systems to an actual gameplay loop.
 
 ---
 
-## Project File Structure
+## Aesthetics and Presentation
+
+The visual presentation aims for a stylised cinematic sci-fi look.
+
+Presentation features include:
+
+- animated main menu
+- loading screen
+- HUD overlays
+- cinematic fail sequence
+- platform colour coding by zone type
+- post-processing modes for bloom, film look, and night vision
+- space-dust haze and screen distortion near danger zones
+
+---
+
+## Project Structure
 
 | File | Purpose |
 |---|---|
 | `main.cpp` | Application entry point |
-| `scenebasic_uniform.h/.cpp` | Main scene class: init, update, render, input, game state |
-| `SceneMeshes.cpp` | Geometry generation: sphere, disk, platform, ship, OBJ loader |
-| `SceneWorld.cpp` | World rendering: black hole, disk, skybox, cell, asteroids, shadow pass |
-| `SceneShip.cpp` | Ship exterior, beacon towers, debris props, cockpit glass |
-| `SceneParticles.cpp` | Dual-type instanced particle system: spawn, update, render, dust haze |
-| `SceneTether.cpp` | Verlet rope simulation, geometry shader ribbon, tether minigame logic |
-| `SceneHUD.cpp` | All 2D overlay: HUD compass, menus, loading screen, win/lose screens |
-| `SceneMainMenu.cpp` | Animated main menu rendering (CPU-rasterized BH, star field) |
-| `Camera.h/.cpp` | FPS-style free-look camera |
-| `GameAudio.h` | irrKlang audio manager (danger music, win/lose stings) |
-| `LensingDebug.h/.cpp` | Research gravitational lensing debug overlay |
-| `shader/blackhole.vert/.frag` | Black hole shadow disk, photon ring, UV warp lensing |
-| `shader/disk.vert/.frag` | Procedural accretion disk with FBM plasma turbulence |
-| `shader/platform.vert/.frag` | Cook-Torrance PBR: all platforms, asteroids, ship, debris, cells |
-| `shader/particles.vert/.frag` | Instanced billboard particle system: dual-type with FBM + temp gradient |
-| `shader/tether.vert/.geom/.frag` | Geometry shader tether ribbon with animated glow width |
-| `shader/shadow_depth.vert/.frag` | Depth-only shadow map pass |
-| `shader/hdr.vert/.frag` | ACES HDR, Gaussian bloom, film mode, night vision, dust haze, BH distortions |
-| `shader/blur.frag` | Separable Gaussian blur (bloom ping-pong) |
-| `shader/skybox.vert/.frag` | Cubemap skybox environment |
-| `media/` | Skybox cubemap faces, platform textures, cell.obj |
-| `helper/` | COMP3015 template helper code |
+| `scenebasic_uniform.h/.cpp` | Main scene update/render/input orchestration |
+| `SceneMeshes.cpp` | Geometry creation and mesh support |
+| `SceneWorld.cpp` | Main world rendering |
+| `SceneShip.cpp` | Ship rendering and related scene objects |
+| `SceneParticles.cpp` | Particle spawning, update, and render |
+| `SceneTether.cpp` | Tether simulation and minigame systems |
+| `SceneHUD.cpp` | HUD, overlays, menus, win/lose screens |
+| `SceneMainMenu.cpp` | Main menu visuals |
+| `Camera.h/.cpp` | Camera system |
+| `GameAudio.h` | Audio manager |
+| `LensingDebug.h/.cpp` | Debug support for lensing effect |
 
 ---
 
-## How It Works
+## Render Pipeline Summary
 
-The application is structured around a single `SceneBasic_Uniform` class split across multiple `.cpp` files by system area. The render path runs each frame as:
+Each frame, the project follows this broad order:
 
-1. **Shadow pass** — render all scene geometry from the light's point of view into a 4096×4096 depth FBO (`renderShadowPass()`)
-2. **Main HDR pass** (into floating-point FBO):
-   - Skybox
-   - Black hole sphere + photon ring (`blackhole.frag`)
-   - Accretion disk (`disk.frag`)
-   - Platforms, ship, asteroids, cells, debris (`platform.frag` — PBR)
-   - Tether rope ribbon (`tether.geom`)
-   - Instanced particle system (`particles.vert/.frag`)
-3. **Bloom pass** — 10-pass separable Gaussian on a ping-pong FBO pair
-4. **HDR composite** — ACES tonemapping, bloom mix, film grade, night vision, dust haze, BH distortions, fade (`hdr.frag`)
-5. **2D overlay** — CPU-rasterized HUD, menus, minigame UI (`SceneHUD.cpp`)
+1. Render shadow depth map
+2. Render main 3D scene into HDR framebuffer
+3. Apply bloom blur passes
+4. Composite final HDR image
+5. Draw HUD / menus / overlay elements
+
+The main 3D scene includes the skybox, black hole, accretion disk, platforms, ship, particles, tether, and collectable objects.
 
 ---
 
 ## Software Engineering Notes
 
-- All geometry is **procedurally generated** or parsed from a self-contained OBJ loader — no Assimp dependency
-- Systems are separated into per-area `.cpp` files for readability (`SceneMeshes`, `SceneWorld`, `SceneShip`, `SceneParticles`, `SceneTether`, `SceneHUD`)
-- Named constants (`HOME_PLATFORM_Z`, `ROPE_SEGMENTS`, `MAX_PARTICLES`) in the header provide a single source of truth across the codebase
-- Per-frame efficiency: `collectedCells` is a cached counter (not an O(n) loop); window title is throttled to 4 Hz; `dustClusterPositions` is pre-computed in `renderParticles()` so `drawHUD()` never re-iterates the full particle array
-- Key edge-detection is member-variable-based so `resetGame()` can zero it — no function-local statics that silently persist across resets
+Key implementation decisions include:
+
+- splitting large scene logic across multiple `.cpp` files by responsibility
+- keeping shared constants in one place
+- using cached values where possible to avoid unnecessary repeated work
+- structuring the project around a central scene class and clear per-system helpers
+- keeping the code compatible with the COMP3015 template structure
+
+---
+
+## Evaluation
+
+I believe the strongest part of the project is the way multiple graphics techniques are combined into one coherent interactive scene rather than being demonstrated separately.
+
+What worked well:
+
+- integrating advanced rendering with gameplay
+- creating a distinctive visual identity
+- building a more polished CW2 version of the original CW1 idea
+
+What could be improved further:
+
+- even more variation in platform layouts and hazards
+- more balancing of the difficulty curve
+- further refinement of the black hole effect toward a more physically grounded result
+- additional optimisation and profiling work
 
 ---
 
@@ -322,62 +316,30 @@ The application is structured around a single `SceneBasic_Uniform` class split a
 
 ### Academic / Technical References
 
-- James, O., von Tunzelmann, E., Franklin, P. and Thorne, K.S. (2015). *Gravitational lensing by spinning black holes in astrophysics, and in the movie Interstellar.* Classical and Quantum Gravity, 32(6), 065001. DOI: 10.1088/0264-9381/32/6/065001  
-  *Research feature: shadow disk, photon ring, Doppler beaming, Keplerian temperature profile.*
-
-- Narkowicz, K. (2015). *ACES Filmic Tone Mapping Curve.* https://knarkowicz.wordpress.com/2016/01/06/  
-  *ACES constants in `hdr.frag` ACESFilm() function.*
-
-- Perlin, K. (1985). *An image synthesizer.* SIGGRAPH 1985.  
-  *FBM noise basis in `particles.vert` ptFbm() and disk/blackhole shaders.*
-
-- McGuire, M. (2020). *Hash Functions for GPU Rendering.* JCGT 9(3). https://jcgt.org/published/0009/03/02/  
-  *h21 hash function used for film grain and night-vision shot noise in `hdr.frag`.*
-
-- Jakobsen, T. (2001). *Advanced Character Physics.* GDC 2001.  
-  *Verlet rope integration in `SceneTether.cpp` — damping and gravity constant rationale.*
-
-- Van Ess, J. (2012). *Real-time Night Vision Rendering.* GPU Pro 3, AK Peters.  
-  *Intensity amplification + phosphor colour model in `hdr.frag` night-vision pass.*
-
-- Blinn, J. F. (1977). *Models of light reflection for computer synthesized pictures.* SIGGRAPH 1977.  
-  *Blinn-Phong basis underlying the PBR diffuse term.*
-
-- LearnOpenGL. https://learnopengl.com  
-  *General reference for OpenGL techniques, framebuffer workflows, shadow mapping, cubemaps.*
-
----
+- James, O., von Tunzelmann, E., Franklin, P. and Thorne, K.S. (2015). *Gravitational lensing by spinning black holes in astrophysics, and in the movie Interstellar.* Classical and Quantum Gravity, 32(6), 065001.
+- Narkowicz, K. (2015). *ACES Filmic Tone Mapping Curve.*
+- Perlin, K. (1985). *An image synthesizer.*
+- Jakobsen, T. (2001). *Advanced Character Physics.*
+- Van Ess, J. (2012). *Real-time Night Vision Rendering.*
+- LearnOpenGL.
 
 ### Asset Credits
 
-#### Skybox / Space Cubemap
-
-Six-face space skybox (Jettelly):
-
-- `jettelly_space_common_blue_RIGHT/LEFT/UP/DOWN/FRONT/BACK.png`
-
-https://jettelly.com/blog/some-space-skyboxes-why-not
-
-#### Platform Texture
-
-- `blue_metal_plate_diff_4k.jpg`
-- `blue_metal_plate_disp_4k.png`
-
-https://polyhaven.com/a/blue_metal_plate
-
-#### Energy Cell Model
-
-- `cell.obj` / `cell.mtl` — original Blender model created by me for use as the collectible pickup object.
+**Skybox:** Jettelly space skybox  
+**Platform texture:** Poly Haven – blue metal plate  
+**Energy cell model:** original Blender model created by me
 
 ---
 
 ## AI Usage Declaration
 
-Generative AI tools were used in a permitted way consistent with the module's partnered-use guidance. AI-assisted work included:
+Generative AI tools were used in a permitted way consistent with the module guidance.
 
-- Debugging shader compilation and OpenGL state issues
-- Explanation of rendering techniques (PBR BRDF, PCF filtering, geometry shader billboarding)
-- Documentation drafting and refinement
-- Code-structure suggestions during iteration
+AI-assisted use included:
 
-A full transcript of AI prompts and responses for each claimed feature is attached to the submission as required by Rule 8 of the CW2 specification.
+- debugging OpenGL and shader issues
+- explaining rendering techniques
+- helping structure documentation
+- supporting iteration and code refinement
+
+A signed declaration form and AI transcript evidence are included with the submission.
