@@ -4,7 +4,7 @@
 **Student ID:** 10805603  
 **Module:** COMP3015 – Games Graphics Pipelines  
 **Module Leader:** Dr Ji-Jian Chin  
-**Repository:** [your GitHub URL]  
+**Repository:** https://github.com/Harrisonscott9970/OpenGl-BlackholeCW2  
 **Video Demo:** [your YouTube URL]
 
 ---
