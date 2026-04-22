@@ -13,9 +13,9 @@
 
 TON 618: Stellar Expedition is a real-time OpenGL / GLSL graphics project created for COMP3015 CW2.
 
-This project extends my CW1 black hole scene into a more complete interactive experience built around multiple advanced rendering techniques from Weeks 5–10 of the module. The player pilots a spacecraft near TON 618, leaves the ship in EVA mode to recover energy cells from relay platforms, and must return safely before being pulled into the black hole.
+The project develops my original CW1 black hole prototype into a broader and more technically ambitious interactive scene built around multiple advanced rendering techniques from Weeks 5–10 of the module. The player pilots a spacecraft near TON 618, exits in EVA mode to recover energy cells from relay platforms, and must return safely before being pulled into the black hole.
 
-The focus of the coursework is the integration of several advanced graphics features into one coherent scene and gameplay loop, including:
+The focus of the coursework is not simply the inclusion of several rendering effects, but the integration of those effects into one coherent scene and gameplay loop. The project combines:
 
 - HDR tonemapping and bloom
 - shadow mapping with PCF filtering
@@ -25,25 +25,43 @@ The focus of the coursework is the integration of several advanced graphics feat
 - a geometry-shader tether ribbon
 - a research-inspired black hole visualisation effect
 
-These rendering systems are combined with HUD systems, menu screens, a tether recovery minigame, score persistence, and cinematic fail / win presentation so that the project functions as a playable and polished graphics portfolio piece rather than a disconnected collection of effects.
+These systems are tied together with HUD overlays, menu presentation, a tether recovery minigame, score persistence, and cinematic fail / win presentation so that the result functions as a playable and polished graphics project rather than a disconnected collection of technical demonstrations.
+
+---
+## Visual Overview
+
+The screenshots below show the project’s key presentation and gameplay systems in context.
+
+### Main Gameplay View
+![Main gameplay view - black hole, accretion disk, cockpit HUD, and environmental scene](images/gameplay_blackhole.png)
+
+### EVA Tether Recovery Minigame
+![Tether recovery minigame showing stabilisation UI and gameplay feedback](images/tether_minigame.png)
+
+### Night Vision Post-Process Mode
+![Night vision mode showing alternate post-processing pipeline during gameplay](images/night_vision.png)
+
+### Main Menu Presentation
+![Animated main menu presentation screen](images/main_menu.png)
 
 ---
 
-## New Contributions Beyond CW1
+## Development Progress from CW1 to CW2
 
-Although this project builds directly on my CW1 black hole scene, the CW2 submission is a substantial extension rather than a simple resubmission.
+Although this project is built on the visual and thematic foundation established in CW1, the CW2 submission is a substantial extension rather than a simple resubmission.
 
-New or significantly expanded CW2 contributions include:
+The original CW1 project focused on a stylised black hole scene with post-processing, shader-based presentation, and a simple collect-and-return gameplay loop. For CW2, that prototype was expanded into a more technically ambitious and more complete interactive system.
 
-- shadow mapping with PCF filtering
-- geometry-shader rendering for the EVA tether ribbon
-- instanced particle rendering for environmental effects
-- noise-based procedural environmental motion and variation
-- Cook-Torrance-style metallic/roughness shading
-- expanded gameplay systems including EVA mode, tether danger/recovery, score persistence, and cinematic fail / win presentation
-- a broader and more modular render pipeline structure across multiple scene systems
+| Area | CW1 | CW2 Extension |
+|---|---|---|
+| Core Visual Theme | Stylised black hole scene | Expanded black hole scene with broader rendering pipeline and stronger presentation systems |
+| Post-Processing | HDR / bloom | HDR / bloom plus additional post-process control and night-vision mode |
+| Gameplay | Collect energy cells and return | EVA mode, tether danger, recovery minigame, score persistence, leaderboard, cinematic fail/win flow |
+| Rendering Features | Earlier prototype-level feature stack | Shadows with PCF, instanced particles, geometry shader tether ribbon, noise-driven environmental motion, Cook-Torrance-style PBR |
+| Scene Structure | Smaller prototype structure | More modular multi-file scene organisation with clearer per-system responsibilities |
+| Presentation | Interactive prototype | Menu systems, loading screen, HUD overlays, visual feedback states, stronger game-style framing |
 
-This allows the original CW1 idea to be developed into a more complete and technically ambitious interactive project.
+The aim of CW2 was therefore not just to increase the number of features, but to build a more coherent real-time graphics project in which rendering, presentation, and gameplay systems support one another.
 
 ---
 
@@ -225,18 +243,23 @@ This improves material definition and surface response compared with a simpler B
 
 **Files:** `shader/blackhole.frag`, `shader/disk.frag`, `shader/particles.frag`
 
-The black hole visuals are informed by black hole visualisation research and cinematic references such as *Interstellar*, but the coursework implementation is a real-time stylised approximation rather than a physically exact simulation.
+The black hole is the visual centrepiece of the project. Its appearance was informed by black hole visualisation research and cinematic references such as *Interstellar*, but the coursework implementation is a real-time stylised approximation rather than a physically exact astrophysical simulation.
 
-The shader focuses on effects such as:
+The implementation focuses on creating a recognisable black hole using a set of layered visual cues:
 
-- a dark shadow region
+- a central dark shadow region
 - a bright photon-ring-style highlight
 - asymmetric brightness / colour emphasis
 - distortion of the surrounding environment
+- integration with the accretion disk and surrounding particles
 
-The research-inspired part of the implementation is the lensing-style visual distortion, ring emphasis, and asymmetric visual treatment around the black hole. The wider gameplay systems, scene composition, post-processing pipeline, and integration into the overall project are my own coursework implementation decisions.
+The research-inspired aspect of the work is the lensing-style treatment of the background and the visual emphasis placed around the black hole boundary. In a full physical simulation, light bending and relativistic effects would require much more expensive numerical treatment. For this coursework project, those ideas were simplified into a real-time shader suitable for interactive rendering.
 
-The aim was to create a recognisable and convincing black hole effect within the constraints of real-time coursework rendering while still grounding the result in research-inspired ideas.
+This trade-off was deliberate. The goal was to preserve the recognisable visual language of black hole lensing while keeping the effect performant enough to integrate into a wider gameplay scene with post-processing, particles, shadows, UI, and input systems active at the same time.
+
+What makes this feature important in the context of the project is not only the shader itself, but also its integration into the wider scene. The black hole is not treated as an isolated graphics experiment: it directly shapes the project’s atmosphere, player danger feedback, scene composition, and overall identity.
+
+This was one of the main areas in which I aimed to move beyond a standard lab-style implementation and instead produce a more distinctive research-informed visual centrepiece.
 
 ---
 
@@ -323,26 +346,39 @@ Key implementation decisions include:
 The main aim here was to keep the project readable and maintainable despite growing from a smaller CW1 prototype into a more feature-rich CW2 submission.
 
 ---
+## Performance and Technical Implementation
 
+The project was designed to combine multiple rendering techniques while remaining suitable for real-time execution inside a playable scene.
+
+Key implementation choices included:
+
+- using instanced rendering for particle systems to reduce draw-call overhead
+- separating the render pipeline into shadow, HDR scene, blur, composite, and HUD stages
+- using a separable blur for bloom rather than a more expensive full-kernel approach
+- structuring gameplay and rendering systems across multiple source files so that scene complexity remained manageable
+- keeping the project compatible with the COMP3015 template structure while extending it significantly
+
+During testing, the project successfully initialised a 4096×4096 PCF shadow map and a particle setup containing approximately 2200 active particles in the tested scene configuration. Development and testing were carried out on an AMD Radeon RX 5700 XT with OpenGL 4.6 support.
+
+The aim was not only to add advanced features, but to integrate them in a way that remained stable, maintainable, and visually coherent in a real-time application.
+---
 ## Evaluation
 
-I believe the strongest part of the project is the way multiple graphics techniques are combined into one coherent interactive scene rather than being demonstrated separately.
+The strongest aspect of the project is the way multiple graphics techniques are combined into a single coherent interactive scene rather than being demonstrated as isolated technical exercises.
 
-What worked well:
+What worked particularly well:
 
-- integrating advanced rendering with gameplay
-- creating a distinctive visual identity
-- building a more polished CW2 version of the original CW1 idea
-- linking rendering systems to player feedback and challenge
+- integrating advanced rendering with an actual gameplay loop
+- creating a distinctive visual identity centred on the black hole and accretion disk
+- using UI, post-processing, and feedback systems to reinforce challenge and atmosphere
+- extending the original CW1 concept into a more substantial and better-structured CW2 project
+- connecting technical features to player-facing outcomes such as danger feedback, tether strain, navigation, and progression
 
-What could be improved further:
+A further strength of the project is that the major rendering features serve more than one purpose. For example, the particle system improves atmosphere and scale, the tether geometry shader contributes both visually and mechanically, and post-processing is used for cinematic presentation as well as gameplay state feedback.
 
-- even more variation in platform layouts and hazards
-- more balancing of the difficulty curve
-- further refinement of the black hole effect toward a more physically grounded result
-- additional optimisation and profiling work
+The main limitations of the current implementation are that the black hole remains a stylised approximation rather than a full physically-based simulation, scene hazard variety could be expanded further, and there is still room for deeper profiling and optimisation work. If developed further, the next steps would be to improve physical grounding in the black hole model, increase gameplay variety across platform zones, and introduce more formal performance measurement.
 
-Overall, the project succeeds best as a stylised and playable graphics showcase that combines rendering, interaction, and presentation into one portfolio-style submission.
+Overall, the project is most successful as a stylised real-time graphics showcase that combines rendering, interaction, feedback, and presentation into a unified portfolio-style submission.
 
 ---
 
