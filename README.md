@@ -33,16 +33,18 @@ These systems are tied together with HUD overlays, menu presentation, a tether r
 The screenshots below show the project’s key presentation and gameplay systems in context.
 
 ### Main Gameplay View
-![Main gameplay view - black hole, accretion disk, cockpit HUD, and environmental scene](images/gameplay_blackhole.png)
+[Main gameplay view - black hole, accretion disk, cockpit HUD, and environmental scene]<img width="799" height="605" alt="image" src="https://github.com/user-attachments/assets/deb86fb5-7042-4412-8491-53801d5fc5c0" />
 
 ### EVA Tether Recovery Minigame
-![Tether recovery minigame showing stabilisation UI and gameplay feedback](images/tether_minigame.png)
+[Tether recovery minigame showing stabilisation UI and gameplay feedback]<img width="801" height="605" alt="image" src="https://github.com/user-attachments/assets/98be1810-b262-4ef5-be5c-f88e8ce05204" />
 
 ### Night Vision Post-Process Mode
-![Night vision mode showing alternate post-processing pipeline during gameplay](images/night_vision.png)
+[Night vision mode showing alternate post-processing pipeline during gameplay]<img width="807" height="601" alt="image" src="https://github.com/user-attachments/assets/45913f2d-a412-4ba2-bdaa-97187de1520e" />
 
 ### Main Menu Presentation
-![Animated main menu presentation screen](images/main_menu.png)
+[Animated main menu presentation screen]<img width="802" height="603" alt="BHMM" src="https://github.com/user-attachments/assets/a78a594d-f2ce-4350-bd9f-a1760a727bcd" />
+
+
 
 ---
 
