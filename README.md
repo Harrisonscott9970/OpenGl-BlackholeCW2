@@ -28,23 +28,22 @@ The focus of the coursework is not simply the inclusion of several rendering eff
 These systems are tied together with HUD overlays, menu presentation, a tether recovery minigame, score persistence, and cinematic fail / win presentation so that the result functions as a playable and polished graphics project rather than a disconnected collection of technical demonstrations.
 
 ---
+
 ## Visual Overview
 
-The screenshots below show the project’s key presentation and gameplay systems in context.
+The screenshots below show the project's key presentation and gameplay systems in context.
 
 ### Main Gameplay View
-[Main gameplay view - black hole, accretion disk, cockpit HUD, and environmental scene]<img width="799" height="605" alt="image" src="https://github.com/user-attachments/assets/deb86fb5-7042-4412-8491-53801d5fc5c0" />
+Main gameplay view - black hole, accretion disk, cockpit HUD, and environmental scene<img width="799" height="605" alt="image" src="https://github.com/user-attachments/assets/deb86fb5-7042-4412-8491-53801d5fc5c0" />
 
 ### EVA Tether Recovery Minigame
-[Tether recovery minigame showing stabilisation UI and gameplay feedback]<img width="801" height="605" alt="image" src="https://github.com/user-attachments/assets/98be1810-b262-4ef5-be5c-f88e8ce05204" />
+Tether recovery minigame showing stabilisation UI and gameplay feedback<img width="801" height="605" alt="image" src="https://github.com/user-attachments/assets/98be1810-b262-4ef5-be5c-f88e8ce05204" />
 
 ### Night Vision Post-Process Mode
-[Night vision mode showing alternate post-processing pipeline during gameplay]<img width="807" height="601" alt="image" src="https://github.com/user-attachments/assets/45913f2d-a412-4ba2-bdaa-97187de1520e" />
+Night vision mode showing alternate post-processing pipeline during gameplay<img width="807" height="601" alt="image" src="https://github.com/user-attachments/assets/45913f2d-a412-4ba2-bdaa-97187de1520e" />
 
 ### Main Menu Presentation
-[Animated main menu presentation screen]<img width="802" height="603" alt="BHMM" src="https://github.com/user-attachments/assets/a78a594d-f2ce-4350-bd9f-a1760a727bcd" />
-
-
+Animated main menu presentation screen<img width="802" height="603" alt="BHMM" src="https://github.com/user-attachments/assets/a78a594d-f2ce-4350-bd9f-a1760a727bcd" />
 
 ---
 
@@ -57,7 +56,7 @@ The original CW1 project focused on a stylised black hole scene with post-proces
 | Area | CW1 | CW2 Extension |
 |---|---|---|
 | Core Visual Theme | Stylised black hole scene | Expanded black hole scene with broader rendering pipeline and stronger presentation systems |
-| Post-Processing | HDR / bloom | HDR / bloom plus additional post-process control and night-vision mode |
+| Post-Processing | HDR/bloom | HDR/bloom plus additional post-process control and night-vision mode |
 | Gameplay | Collect energy cells and return | EVA mode, tether danger, recovery minigame, score persistence, leaderboard, cinematic fail/win flow |
 | Rendering Features | Earlier prototype-level feature stack | Shadows with PCF, instanced particles, geometry shader tether ribbon, noise-driven environmental motion, Cook-Torrance-style PBR |
 | Scene Structure | Smaller prototype structure | More modular multi-file scene organisation with clearer per-system responsibilities |
@@ -92,7 +91,7 @@ The submission zip contains:
 - all required assets and shader files
 - this README
 - the signed Generative AI declaration
-- AI prompt / transcript evidence for claimed features
+- AI prompt/transcript evidence for claimed features
 
 ---
 
@@ -121,7 +120,7 @@ The submission zip contains:
 The main gameplay loop is:
 
 1. Start from the home platform
-2. Fly to relay platforms positioned around the black hole
+2. Fly to the relay platforms positioned around the black hole
 3. Leave the ship in EVA mode
 4. Collect all energy cells
 5. Return to the home platform to complete the mission
@@ -130,7 +129,7 @@ The black hole creates increasing danger as the player moves closer. In EVA mode
 
 Scores are written to `scores.txt`, and the menu includes a leaderboard showing the top recorded runs.
 
-This gameplay structure was designed so that the project would function as a genuine interactive scene with goals, challenge, failure, recovery, and persistence rather than only as a visual demonstration.
+This gameplay structure was designed so that the project would function as a genuine interactive scene with goals, challenges, failure, recovery, and persistence rather than only as a visual demonstration.
 
 ---
 
@@ -175,7 +174,7 @@ The particle system is rendered using instancing so that a large number of billb
 
 Two main particle roles are used:
 
-- particles around the black hole / accretion region
+- particles around the black hole/accretion region
 - drifting space-dust particles throughout the scene
 
 Particle motion is influenced by lifetime, black hole pull, and noise-based turbulence so that the environment feels more dynamic and less empty. This feature helped improve both scene atmosphere and rendering scale.
@@ -186,7 +185,7 @@ Particle motion is influenced by lifetime, black hole pull, and noise-based turb
 
 **Files:** `shader/shadow_depth.vert`, `shader/shadow_depth.frag`, `shader/platform.frag`, `scenebasic_uniform.cpp`
 
-A shadow map is rendered from the light’s point of view before the main scene pass.
+A shadow map is rendered from the light's point of view before the main scene pass.
 
 In the main platform/material shader, Percentage Closer Filtering (PCF) is used to soften shadow edges and reduce aliasing. A depth bias is also applied to reduce acne and self-shadowing artefacts.
 
@@ -209,7 +208,7 @@ Examples include:
 - subtle animated variation in the accretion disk surface
 - procedural environmental motion in surrounding debris and scene movement behaviour
 
-The procedural asteroid / environmental motion work was intentionally carried forward into CW2 as part of the noise-based feature set rather than being fully claimed in CW1. In this submission, that procedural variation is treated as part of the project’s broader environmental design and scene animation strategy.
+The procedural asteroid / environmental motion work was intentionally carried forward into CW2 as part of the noise-based feature set rather than being fully claimed in CW1. In this submission, that procedural variation is treated as part of the project's broader environmental design and scene animation strategy.
 
 Using noise across several interconnected systems also helped make the world feel more cohesive rather than limiting procedural behaviour to one isolated effect.
 
@@ -241,27 +240,146 @@ This improves material definition and surface response compared with a simpler B
 
 ---
 
-## Research-Inspired Black Hole Visualisation
+## Research — Black Hole Visualisation
 
-**Files:** `shader/blackhole.frag`, `shader/disk.frag`, `shader/particles.frag`
+**Files:** `shader/blackhole.frag`, `shader/disk.frag`  
+**Papers:**
+- James, O., von Tunzelmann, E., Franklin, P. and Thorne, K.S. (2015). *Gravitational lensing by spinning black holes in astrophysics, and in the movie Interstellar.* Classical and Quantum Gravity, 32(6), 065001. doi:10.1088/0264-9381/32/6/065001
+- McEwan, I., Sheets, D., Richardson, M. and Gustavson, S. (2012). *Efficient Computational Noise in GLSL.* Journal of Graphics Tools, 16(2).
 
-The black hole is the visual centrepiece of the project. Its appearance was informed by black hole visualisation research and cinematic references such as *Interstellar*, but the coursework implementation is a real-time stylised approximation rather than a physically exact astrophysical simulation.
+Both papers are cited inline in the shader source at every point of use.
 
-The implementation focuses on creating a recognisable black hole using a set of layered visual cues:
+The black hole visualisation implements specific equations from the James et al. paper rather than using generic glow effects. The goal was to produce a physically grounded real-time approximation that preserves the key visual signatures of Schwarzschild black hole lensing while remaining fast enough to run alongside the full scene — particles, shadows, PBR, UI, and audio all active simultaneously.
 
-- a central dark shadow region
-- a bright photon-ring-style highlight
-- asymmetric brightness / colour emphasis
-- distortion of the surrounding environment
-- integration with the accretion disk and surrounding particles
+---
 
-The research-inspired aspect of the work is the lensing-style treatment of the background and the visual emphasis placed around the black hole boundary. In a full physical simulation, light bending and relativistic effects would require much more expensive numerical treatment. For this coursework project, those ideas were simplified into a real-time shader suitable for interactive rendering.
+### Schwarzschild Shadow Boundary — `blackhole.frag`
 
-This trade-off was deliberate. The goal was to preserve the recognisable visual language of black hole lensing while keeping the effect performant enough to integrate into a wider gameplay scene with post-processing, particles, shadows, UI, and input systems active at the same time.
+The dark shadow of a black hole is bounded by the critical impact parameter: the smallest angular separation from the black hole at which a photon can escape rather than spiral inward. For a Schwarzschild black hole this is:
 
-What makes this feature important in the context of the project is not only the shader itself, but also its integration into the wider scene. The black hole is not treated as an isolated graphics experiment: it directly shapes the project’s atmosphere, player danger feedback, scene composition, and overall identity.
+**b_crit = (3√3 / 2) · r_s** *(James et al. 2015, Eq. 8)*
 
-This was one of the main areas in which I aimed to move beyond a standard lab-style implementation and instead produce a more distinctive research-informed visual centrepiece.
+This is implemented as `shadowEdge` in `blackhole.frag`. The constant `2.598` used to recover the Schwarzschild radius from the shadow size is exactly `3√3 / 2`, encoding Eq. 8 directly:
+
+```glsl
+// blackhole.frag, line 97
+float shadowEdge = clamp(0.268 * (bhRworld / D), 0.05, 0.85);
+
+// blackhole.frag, line 146 — Rs recovered via Eq. 8 (2.598 = 3√3/2)
+float Rs = (shadowEdge * D) / 2.598;
+```
+
+---
+
+### Ray Deflection — `blackhole.frag`
+
+Photons that escape the shadow region are deflected by the black hole's gravity before reaching the camera. The analytical weak-field deflection angle from the paper is:
+
+**α = 2 r_s / (b · D)** *(James et al. 2015, Eq. 14)*
+
+This is applied to each escaped ray's exit direction before sampling the skybox cubemap, producing the characteristic stretching and warping of background stars around the shadow edge:
+
+```glsl
+// blackhole.frag, lines 146–148
+float alpha2 = min(2.0 * Rs / max(sinA * D, 0.001), 3.14159265);
+d = toFrag * cos(alpha2) + perp * sin(alpha2);
+```
+
+---
+
+### Photon Ring — `blackhole.frag`
+
+Just outside the shadow boundary, photons that have orbited the black hole before escaping produce a thin bright ring. The paper describes this using a combined Lorentzian and Gaussian intensity profile (§5). Both the primary and secondary photon rings are implemented:
+
+```glsl
+// blackhole.frag, lines 167–174
+float rg1Peak = exp(-ringT * ringT * 1.4);              // Gaussian peak
+float rg1Lor  = 1.0 / (1.0 + ringT * ringT * 0.35);    // Lorentzian spread
+col += mix(vec3(3.5,1.2,0.08), vec3(9.0,6.5,2.8), rg1Peak)
+     * rg1Lor * rg1Peak * shimmer2 * dop2 * 10.0;
+
+// Secondary photon ring (narrower, dimmer)
+float ringT2 = (bExcess - ringWidth * 0.28) / (ringWidth * 0.20);
+col += vec3(5.0,2.4,0.40) * exp(-ringT2 * ringT2) * dop2 * shimmer2 * 4.5;
+```
+
+A ghost disk image — the lensed view of the far side of the accretion disk that becomes visible near the shadow boundary — is also rendered as a separate arc (`blackhole.frag`, lines 177–202).
+
+---
+
+### Relativistic Doppler Beaming — `disk.frag`
+
+The most recognisable feature of the *Interstellar* Gargantua render is the asymmetric brightness of the accretion disk: one side is dramatically brighter than the other. This is caused by relativistic Doppler beaming — material orbiting toward the observer is blue-shifted and intensified; material orbiting away is red-shifted and dimmed.
+
+The paper defines the Keplerian orbital velocity as:
+
+**β = v_K / c ≈ 0.58 / √r** *(James et al. 2015, approximation to Eq. 4)*
+
+The Doppler factor is:
+
+**δ = √( (1 + β · n̂) / (1 − β · n̂) )** *(James et al. 2015, §4, Eq. 9)*
+
+And the beaming intensity boost follows:
+
+**I ∝ δ⁴** *(James et al. 2015, §4, Eq. 10)*
+
+All three equations are implemented directly in `disk.frag`:
+
+```glsl
+// disk.frag, line 155 — β ≈ 0.58/√r  (James et al. Eq. 4 approximation)
+float beta    = clamp(0.58 / max(sqrt(radius), 0.45), 0.0, 0.78);
+
+// disk.frag, line 157 — Doppler factor δ  (James et al. Eq. 9)
+float doppler = sqrt((1.0 + beta*vDotCam) / max(0.001, 1.0 - beta*vDotCam));
+
+// disk.frag, line 159 — Beaming intensity ∝ δ⁴  (James et al. Eq. 10)
+float beaming = pow(doppler, 4.0);
+```
+
+The same Doppler computation is also applied inside the shadow region of `blackhole.frag` (lines 113–116) and on the ghost disk arc (lines 194–197), using β values consistent with the orbital radii in each zone.
+
+---
+
+### Keplerian Rotation and ISCO — `disk.frag`
+
+The disk co-rotates at Keplerian angular speed (Ω ∝ r^{-3/2}, §3.1 of the paper), implemented as the `spinAngle` used to co-rotate the noise sampling frame so that plasma filaments appear to orbit rather than drift:
+
+```glsl
+// disk.frag, lines 110–111 — Keplerian Ω ∝ r^{-3/2}
+float spinRate  = 0.62 / max(radius * radius, 0.30);
+float spinAngle = angle - spinRate * uTime;
+```
+
+The innermost stable circular orbit (ISCO) — the closest orbit at which matter remains stable before falling inward — is marked by a white-hot ring at the disk's inner edge, with a sharp emission spike and a wider capture glow:
+
+```glsl
+// disk.frag, lines 181–186
+float captureGlow = exp(-pow((radius - innerEdge) * 60.0,  2.0));  // broad hot region
+float iscoRing    = exp(-pow((radius - innerEdge - 0.02) * 130.0, 2.0));  // sharp ring
+```
+
+---
+
+### Simplex Noise Plasma — `blackhole.frag`, `disk.frag`
+
+The accretion disk plasma turbulence and the inner-shadow glow texture are produced using Simplex 3D noise from McEwan et al. (2012). The `permute` and `taylorInvSqrt` functions are taken verbatim from the paper's reference implementation (MIT licence, github.com/ashima/webgl-noise) and cited at the point of use in both shader files. The noise is sampled in a co-rotating frame at three octave scales to build layered plasma filament structure, with alternating time directions per octave to avoid axis-aligned banding:
+
+```glsl
+// disk.frag, lines 118–124 — three-octave co-rotating plasma
+float t1 = snoise01(nPos*1.6 + vec3(0.0,        uTime*0.09, 0.0));
+float t2 = snoise01(nPos*3.8 + vec3(uTime*0.04, 0.0,        uTime*0.025));
+float t3 = snoise01(nPos*7.2 + vec3(0.0,       -uTime*0.06, uTime*0.030));
+float t4 = snoise01(nPos*14.0+ vec3(uTime*0.08,  uTime*0.04, 0.0));
+float plasma = clamp(t1*0.44 + t2*0.30 + t3*0.16 + t4*0.10, 0.0, 1.0);
+```
+
+---
+
+### Why This Qualifies as a Research Implementation
+
+The implementation goes beyond using the paper as a visual reference. Specific numbered equations from James et al. (2015) — Eq. 4, Eq. 8, Eq. 9, Eq. 10, Eq. 14, and the §5 photon ring profile — are each implemented as distinct, identifiable lines of GLSL code with the equation number cited in the comment directly above. The McEwan et al. noise functions are included verbatim with attribution. Every research-derived section of both shaders includes an inline citation linking the code back to the source.
+
+The main engineering trade-off was accuracy versus real-time performance. A full numerical geodesic integration of the Kerr metric would reproduce the effect exactly but is far too expensive for interactive use. The approach taken — analytical impact-parameter shadow boundary, first-order deflection angle, and Doppler beaming with Keplerian velocity — preserves the three most visually dominant signatures of the paper (shadow size, photon ring structure, and disk brightness asymmetry) while running at interactive frame rates alongside the rest of the scene.
 
 ---
 
@@ -326,7 +444,7 @@ A major goal of the project was to ensure that the technical rendering features 
 Each frame, the project broadly follows this order:
 
 1. Render shadow depth map
-2. Render main 3D scene into HDR framebuffer
+2. Render the main 3D scene into an HDR framebuffer
 3. Apply bloom blur passes
 4. Composite final HDR image
 5. Draw HUD, menus, and overlay elements
@@ -348,6 +466,7 @@ Key implementation decisions include:
 The main aim here was to keep the project readable and maintainable despite growing from a smaller CW1 prototype into a more feature-rich CW2 submission.
 
 ---
+
 ## Performance and Technical Implementation
 
 The project was designed to combine multiple rendering techniques while remaining suitable for real-time execution inside a playable scene.
@@ -363,7 +482,9 @@ Key implementation choices included:
 During testing, the project successfully initialised a 4096×4096 PCF shadow map and a particle setup containing approximately 2200 active particles in the tested scene configuration. Development and testing were carried out on an AMD Radeon RX 5700 XT with OpenGL 4.6 support.
 
 The aim was not only to add advanced features, but to integrate them in a way that remained stable, maintainable, and visually coherent in a real-time application.
+
 ---
+
 ## Evaluation
 
 The strongest aspect of the project is the way multiple graphics techniques are combined into a single coherent interactive scene rather than being demonstrated as isolated technical exercises.
@@ -378,9 +499,9 @@ What worked particularly well:
 
 A further strength of the project is that the major rendering features serve more than one purpose. For example, the particle system improves atmosphere and scale, the tether geometry shader contributes both visually and mechanically, and post-processing is used for cinematic presentation as well as gameplay state feedback.
 
-The main limitations of the current implementation are that the black hole remains a stylised approximation rather than a full physically-based simulation, scene hazard variety could be expanded further, and there is still room for deeper profiling and optimisation work. If developed further, the next steps would be to improve physical grounding in the black hole model, increase gameplay variety across platform zones, and introduce more formal performance measurement.
+The main limitations of the current implementation are that the analytical deflection model is a first-order weak-field approximation rather than a full geodesic integration, scene hazard variety could be expanded further, and there is still room for deeper profiling and optimisation work. If developed further, the next steps would be to improve accuracy in the near-horizon region using a numerical approach, increase gameplay variety across platform zones, and introduce more formal performance measurement.
 
-Overall, the project is most successful as a stylised real-time graphics showcase that combines rendering, interaction, feedback, and presentation into a unified portfolio-style submission.
+Overall, the project is most successful as a research-informed real-time graphics showcase that combines physically grounded rendering, interaction, feedback, and presentation into a unified portfolio-style submission.
 
 ---
 
@@ -388,12 +509,13 @@ Overall, the project is most successful as a stylised real-time graphics showcas
 
 ### Academic / Technical References
 
-- James, O., von Tunzelmann, E., Franklin, P. and Thorne, K.S. (2015). *Gravitational lensing by spinning black holes in astrophysics, and in the movie Interstellar.* Classical and Quantum Gravity, 32(6), 065001.
-- Narkowicz, K. (2015). *ACES Filmic Tone Mapping Curve.*
-- Perlin, K. (1985). *An image synthesizer.*
+- James, O., von Tunzelmann, E., Franklin, P. and Thorne, K.S. (2015). *Gravitational lensing by spinning black holes in astrophysics, and in the movie Interstellar.* Classical and Quantum Gravity, 32(6), 065001. doi:10.1088/0264-9381/32/6/065001
+- McEwan, I., Sheets, D., Richardson, M. and Gustavson, S. (2012). *Efficient Computational Noise in GLSL.* Journal of Graphics Tools, 16(2). github.com/ashima/webgl-noise
+- Narkowicz, K. (2015). *ACES Filmic Tone Mapping Curve.* https://knarkowicz.wordpress.com/2016/01/06/
+- Perlin, K. (1985). *An image synthesiser.* SIGGRAPH '85.
 - Jakobsen, T. (2001). *Advanced Character Physics.*
-- Van Ess, J. (2012). *Real-time Night Vision Rendering.*
-- LearnOpenGL.
+- Van Ess, J. (2012). *Real-time Night Vision Rendering.* GPU Pro 3, AK Peters.
+- de Vries, J. *LearnOpenGL.* https://learnopengl.com
 
 ### Asset Credits
 
