@@ -537,3 +537,7 @@ AI-assisted use included:
 - supporting iteration and code refinement
 
 A signed declaration form and AI transcript evidence are included with the submission.
+
+---
+
+<img width="787" height="383" alt="image" src="https://github.com/user-attachments/assets/50a4d9e8-0896-4a73-b6f6-5629a3476cae" />
