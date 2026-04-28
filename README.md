@@ -535,5 +535,17 @@ AI-assisted use included:
 - explaining rendering techniques
 - helping structure documentation
 - supporting iteration and code refinement
+  <img width="813" height="548" alt="image" src="https://github.com/user-attachments/assets/37f3b229-d1c3-45cb-9835-6db86958e22c" />
+
+  <img width="938" height="303" alt="image" src="https://github.com/user-attachments/assets/8daba61c-84ba-43b7-b115-bd1778cffa4f" />
+
+  <img width="814" height="637" alt="image" src="https://github.com/user-attachments/assets/beb0c2d4-301b-4c39-9632-c2de2adaf460" />
+
+  <img width="923" height="741" alt="image" src="https://github.com/user-attachments/assets/9b5671a9-7b44-4d17-9adc-87f6126de35d" />
+
 
 A signed declaration form and AI transcript evidence are included with the submission.
+
+---
+
+<img width="787" height="383" alt="image" src="https://github.com/user-attachments/assets/50a4d9e8-0896-4a73-b6f6-5629a3476cae" />
