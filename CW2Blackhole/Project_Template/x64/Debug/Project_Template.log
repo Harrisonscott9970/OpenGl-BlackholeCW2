@@ -1,5 +1,7 @@
-﻿  scenebasic_uniform.cpp
-LINK : warning LNK4098: defaultlib 'MSVCRT' conflicts with use of other libs; use /NODEFAULTLIB:library
+﻿  SceneMeshes.cpp
+  SceneWorld.cpp
+  scenebasic_uniform.cpp
+  Generating Code...
   Project_Template.vcxproj -> C:\Users\Harrison\Desktop\CompProject\x64\Debug\Project_Template.exe
   Copying shaders and media to output directory...
   18 File(s) copied

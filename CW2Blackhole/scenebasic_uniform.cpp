@@ -670,35 +670,34 @@ void SceneBasic_Uniform::update(float t)
         }
     }
 
-    // ── Shadow / primary light — elevated above-and-forward, slow orbital wobble ──
-    // Key constraint: the light must be on the PLAYER'S SIDE (positive Z) of the
-    // scene so surfaces facing the player receive diffuse illumination.  Placing it
-    // at the BH position (z = -1350) backlights every forward-facing surface,
-    // making platforms appear dark/transparent.
+    // ── Shadow / primary light — from the BH side, elevated ~55° above horizon ──
+    // Light sits between the BH (z=-1350) and the scene (z=145), elevated so
+    // it also illuminates platform top faces.
     //
-    // Position chosen: ~40° elevation from the scene, offset to the right (+X).
-    // Shadows fall in the -Z direction (toward the BH), so they read as
-    // "cast by the BH's gravitational lens glare" without the backlit artefact.
+    // With the light on the BH side (z < scene.z):
+    //   • The face of each platform FACING the BH gets the highest NdotL  ✓
+    //   • Top faces get NdotL ≈ 0.79  ✓
+    //   • Player-facing faces are in shadow (compensated by ambient + fill)
+    //   • Beacon-tower shadows fall in the +Z direction (toward the player),
+    //     i.e. "behind" objects from the player's viewpoint  ✓
     //
-    // Slow Lissajous wobble: ±80 u X, ±55 u Z (different periods so it never
-    // repeats exactly). At ~650 u from the scene, ±80 u = ~7° of arc — subtle
-    // but clearly visible as a slow shadow drift on beacon towers.
-    float sWobX = sinf(t * 0.20f) * 80.0f;
-    float sWobZ = cosf(t * 0.15f) * 55.0f;
-    shadowLightPos = glm::vec3(380.0f + sWobX, 460.0f, 500.0f + sWobZ);
+    // Slow Lissajous wobble makes the shadow sweep visibly over time.
+    float sWobX = sinf(t * 0.20f) * 60.0f;
+    float sWobZ = cosf(t * 0.15f) * 40.0f;
+    shadowLightPos = glm::vec3(sWobX, 450.0f, -200.0f + sWobZ);
 
-    // Main scene light == shadow light so PBR shading & shadow depth are consistent
-    // (no mis-match where shading says "left" but shadow says "right").
+    // Keep PBR shading direction == shadow depth direction (no inconsistency).
     lightPos = shadowLightPos;
 
-    // Recompute light-space matrix every frame so wobble shows up in shadows.
+    // Recompute light-space matrix every frame so the wobble shows in shadows.
     const glm::vec3 shadowSceneCentre(0.0f, 0.0f, 145.0f);
     glm::mat4 sView = glm::lookAt(shadowLightPos, shadowSceneCentre,
                                   glm::vec3(0.0f, 1.0f, 0.0f));
-    // ±540 u ortho covers all relay platforms (max radius 310 u from centre).
-    // near = 2 u, far = 1800 u (light is now ~650 u from scene, far covers BH).
+    // ±540 u ortho covers all relay platforms (max radius ≈ 320 u from centre).
+    // near = 100 u, far = 1400 u — tighter range improves depth precision and
+    // avoids including geometry far outside the scene.
     const float SO = 540.0f;
-    glm::mat4 sProj = glm::ortho(-SO, SO, -SO, SO, 2.0f, 1800.0f);
+    glm::mat4 sProj = glm::ortho(-SO, SO, -SO, SO, 100.0f, 1400.0f);
     lightSpaceMatrix = sProj * sView;
 
     // Debug toggle keys
@@ -1039,14 +1038,24 @@ void SceneBasic_Uniform::render()
 
     platformProg.use();
     platformProg.setUniform("uBaseColor", glm::vec3(0.04f, 0.05f, 0.07f));
-    platformProg.setUniform("uGlowColor", glm::vec3(0.18f, 0.85f, 1.20f));
-    platformProg.setUniform("uGlowStrength", 1.8f);
+    // Low glow strength so the PBR dark-metal look stays dominant at any
+    // viewing angle.  The rim formula is  0.08 + glowStrength * 0.16, so
+    // 0.10 gives 0.096 — a very tight edge catch-light rather than a full
+    // face wash.  Old value (1.8) gave 0.368, overwhelming the dark albedo.
+    platformProg.setUniform("uGlowColor",    glm::vec3(0.12f, 0.55f, 0.90f));
+    platformProg.setUniform("uGlowStrength", 0.10f);
     platformProg.setUniform("uIsCore", 0);
     platformProg.setUniform("uHasDiffuse", satellitePlatformTex ? 1 : 0);
     platformProg.setUniform("uHasNormal", 0);
-    platformProg.setUniform("uLightPos2", glm::vec3(0.0f, 4.0f, 145.0f));
-    platformProg.setUniform("uLightColor2", glm::vec3(0.18f, 0.85f, 1.20f));
-    platformProg.setUniform("uLightStrength2", 0.6f);
+    platformProg.setUniform("uMetallic",  0.30f);   // polished ship-bay metal
+    platformProg.setUniform("uRoughness", 0.45f);   // semi-specular
+    platformProg.setUniform("uDissolve",  0.00f);   // home platform is pristine
+    // Fill light: positioned in front of the scene (player side) so it
+    // illuminates the player-facing faces that the BH-side primary light leaves
+    // in shadow.  Kept subtle — cool neutral to avoid tinting.
+    platformProg.setUniform("uLightPos2",    glm::vec3(0.0f, 120.0f, 520.0f));
+    platformProg.setUniform("uLightColor2",  glm::vec3(0.50f, 0.60f, 0.72f));
+    platformProg.setUniform("uLightStrength2", 0.30f);
 
     glm::mat4 upperModel =
         glm::translate(glm::mat4(1.f), glm::vec3(0, 0.8f, 145.0f)) *
@@ -1056,9 +1065,10 @@ void SceneBasic_Uniform::render()
     glBindVertexArray(platVAO);
     glDrawArrays(GL_TRIANGLES, 0, platVertCount);
 
-    platformProg.setUniform("uBaseColor", glm::vec3(0.03f, 0.04f, 0.06f));
-    platformProg.setUniform("uGlowColor", glm::vec3(0.18f, 0.85f, 1.20f));
-    platformProg.setUniform("uGlowStrength", 1.4f);
+    platformProg.setUniform("uBaseColor",    glm::vec3(0.03f, 0.04f, 0.06f));
+    platformProg.setUniform("uGlowColor",    glm::vec3(0.12f, 0.55f, 0.90f));
+    platformProg.setUniform("uGlowStrength", 0.08f);
+    platformProg.setUniform("uDissolve",     0.00f);
 
     glm::mat4 lowerModel =
         glm::translate(glm::mat4(1.f), glm::vec3(0, -1.1f, 145.0f)) *
@@ -1074,23 +1084,29 @@ void SceneBasic_Uniform::render()
 
         glm::vec3 baseColor(0.03f, 0.04f, 0.06f);  // dark gunmetal
         glm::vec3 glowColor = zone.accentColor;
-        float glowStrength = zone.glowStrength * 1.6f;  // stronger neon rim
+        float glowStrength = zone.glowStrength;  // already tuned in getZoneGlowStrength()
 
         // Week 10 PBR: per-zone material — condition affects surface roughness.
         // HomeRelay: well-maintained, semi-polished plating → lower roughness.
         // StableRelay: standard operational metal → moderate roughness.
         // DamagedRelay: corroded/pitted surface → non-metallic, high roughness.
         // HazardRelay: heavily degraded, near-crumbling → near-dielectric roughness.
+        //
+        // Week 9 Noise: uDissolve drives disintegration — damaged platforms have
+        // physical holes cut through the mesh by the FBM dissolve in platform.frag.
         float zoneMetallic  = 0.15f;
         float zoneRoughness = 0.55f;
+        float zoneDissolve  = 0.00f;    // Week 9: fraction of mesh discarded
         if (zone.type == PlatformZoneType::DamagedRelay) {
             baseColor     = glm::vec3(0.05f, 0.04f, 0.05f);
             zoneMetallic  = 0.06f;   // corrosion strips metallic sheen
             zoneRoughness = 0.82f;   // heavily pitted
+            zoneDissolve  = 0.13f;   // partial structural failure — some holes
         } else if (zone.type == PlatformZoneType::HazardRelay) {
             baseColor     = glm::vec3(0.06f, 0.04f, 0.03f);
             zoneMetallic  = 0.03f;   // oxidised beyond recognition
             zoneRoughness = 0.94f;
+            zoneDissolve  = 0.22f;   // severe disintegration — large gaps, burn edges
         } else if (zone.type == PlatformZoneType::HomeRelay) {
             baseColor     = glm::vec3(0.03f, 0.05f, 0.08f);
             zoneMetallic  = 0.22f;   // freshly maintained, clean metal
@@ -1106,9 +1122,13 @@ void SceneBasic_Uniform::render()
         platformProg.setUniform("uHasNormal", 0);
         platformProg.setUniform("uMetallic",  zoneMetallic);
         platformProg.setUniform("uRoughness", zoneRoughness);
+        platformProg.setUniform("uDissolve",  zoneDissolve);   // Week 9 dissolve
+        // Fill light: the beacon head just above the platform.
+        // Strength kept moderate so the accent colour tints the nearest
+        // face without washing out the dark PBR metallic base.
         platformProg.setUniform("uLightPos2", cellLightPos);
-        platformProg.setUniform("uLightColor2", glowColor * 1.2f);
-        platformProg.setUniform("uLightStrength2", 1.1f);
+        platformProg.setUniform("uLightColor2", glowColor * 0.7f);
+        platformProg.setUniform("uLightStrength2", 0.45f);
 
         if (satellitePlatformTex)
         {

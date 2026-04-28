@@ -261,13 +261,20 @@ glm::vec3 SceneBasic_Uniform::getZoneAccentColor(PlatformZoneType type) const
 
 float SceneBasic_Uniform::getZoneGlowStrength(PlatformZoneType type) const
 {
+    // Platform DECK glow strength — kept low so the PBR metallic appearance
+    // dominates.  The rim formula is  0.08 + glowStrength * 0.16;  at 0.40
+    // that is 0.144 — a tight edge catch-light.  Old values (1.8–2.4) gave
+    // 0.37–0.46, which overwhelmed the dark albedo and made every platform
+    // surface look brightly lit and cyan from any sideways viewing angle.
+    // Beacon towers, energy cells, and debris have their own glow uniforms
+    // and are unaffected by this table.
     switch (type)
     {
-    case PlatformZoneType::HomeRelay:    return 2.20f;
-    case PlatformZoneType::StableRelay:  return 1.80f;
-    case PlatformZoneType::DamagedRelay: return 2.00f;
-    case PlatformZoneType::HazardRelay:  return 2.40f;
-    default:                             return 1.80f;
+    case PlatformZoneType::HomeRelay:    return 0.40f;
+    case PlatformZoneType::StableRelay:  return 0.32f;
+    case PlatformZoneType::DamagedRelay: return 0.28f;  // corroded — even dimmer
+    case PlatformZoneType::HazardRelay:  return 0.48f;  // slightly brighter warning red
+    default:                             return 0.32f;
     }
 }
 
@@ -549,6 +556,10 @@ void SceneBasic_Uniform::setPlatformUniforms(const glm::mat4& view,
     //            — see platform.frag for full citation block.
     platformProg.setUniform("uMetallic",  0.12f);   // general space-metal default
     platformProg.setUniform("uRoughness", 0.58f);   // moderately rough metal
+
+    // Week 9 Noise: default to no dissolve — only DamagedRelay / HazardRelay
+    // zone platforms override this to a non-zero value (set in render() zone loop).
+    platformProg.setUniform("uDissolve",  0.00f);
 
     // Shadow map uniforms are set once per frame in render() before the first
     // platform draw — calling setShadowUniforms() here would redundantly rebind

@@ -35,38 +35,88 @@ uniform int       uShadowEnabled;
 uniform float uMetallic;
 uniform float uRoughness;
 
+// Week 9 Noise: 0 = intact platform; >0 = disintegration fraction (max ~0.25)
+uniform float uDissolve;
+
 layout(location = 0) out vec4 FragColor;
+
+// ── Week 9: FBM value-noise — surface circuits & disintegration ───────────────
+// 4-octave fractional Brownian motion (Perlin-family value noise) drives two
+// distinct visual effects:
+//   1. Animated energy-circuit etch lines etched into every platform surface.
+//   2. Disintegration dissolve on Damaged/Hazard relay platforms: fragments
+//      whose noise value falls below uDissolve are discarded, leaving real
+//      geometric holes.  The surviving fragments at the crumble boundary glow
+//      orange-hot — a "burn edge" simulating superheated metal.
+//
+// Reference: Perlin, K. (1985). "An image synthesizer." SIGGRAPH '85.
+//   The smoothstep C1 interpolant and FBM octave-stacking pattern follow
+//   Inigo Quilez's canonical FBM reference: https://iquilezles.org/articles/fbm/
+float nHash(vec2 p)
+{
+    p  = fract(p * vec2(127.1, 311.7));
+    p += dot(p, p + 19.19);
+    return fract(p.x * p.y);
+}
+
+float nVal(vec2 p)
+{
+    vec2 i = floor(p);
+    vec2 f = fract(p);
+    f = f * f * (3.0 - 2.0 * f);          // C1-continuous smoothstep
+    return mix(
+        mix(nHash(i),                nHash(i + vec2(1.0, 0.0)), f.x),
+        mix(nHash(i + vec2(0.0, 1.0)), nHash(i + vec2(1.0, 1.0)), f.x),
+        f.y);
+}
+
+float fbm(vec2 p)
+{
+    float v = 0.0, a = 0.5;
+    for (int i = 0; i < 4; ++i)
+    {
+        v += a * nVal(p);
+        p  = p * 2.3 + vec2(1.7, 9.2);    // offset each octave to break banding
+        a *= 0.5;
+    }
+    return v;
+}
 
 // 0 = normal render, 1 = show shadow map as greyscale for debugging
 const int DEBUG_SHADOWS = 0;
 
 // Returns how lit a pixel is (1.0 = fully lit, 0.0 = fully in shadow)
-// Uses a 5x5 PCF filter for soft shadow edges
+// Shadow calculation — matches the LearnOpenGL Shadow Mapping tutorial
+// (learnopengl.com/Advanced-Lighting/Shadows/Shadow-Mapping) with a 5×5
+// PCF kernel instead of the tutorial's 3×3 for softer edges.
 float calcShadow(vec4 lightSpacePos, vec3 N, vec3 L)
 {
     if (uShadowEnabled == 0) return 1.0;
 
-    vec3 proj = lightSpacePos.xyz / max(lightSpacePos.w, 0.0001);
+    // Perspective divide (w == 1 for ortho, but kept for correctness)
+    vec3 proj = lightSpacePos.xyz / lightSpacePos.w;
+    // Map NDC [-1,1] → texture coords [0,1]
     proj = proj * 0.5 + 0.5;
 
-    // Outside shadow map bounds = treat as lit
-    if (proj.x < 0.0 || proj.x > 1.0 ||
-        proj.y < 0.0 || proj.y > 1.0 ||
-        proj.z < 0.0 || proj.z > 1.0)
-    {
+    // LearnOpenGL: regions outside the light frustum are not in shadow
+    if (proj.z > 1.0)
         return 1.0;
-    }
+
+    // XY outside the shadow map border → GL_CLAMP_TO_BORDER returns 1.0
+    // (far-plane depth), so those samples never contribute shadow.
 
     float currentDepth = proj.z;
+
+    // Slope-scaled bias (LearnOpenGL formula scaled to our depth range).
+    // GL_FRONT culling means back-faces are in the depth map; front faces
+    // are always closer to the light (currentDepth < closestDepth), so a
+    // tiny bias is sufficient — no self-shadowing risk.
     float cosTheta = max(dot(N, L), 0.0);
+    float bias = max(0.0005 * (1.0 - cosTheta), 0.0001);
 
-    // Slope-scaled bias prevents shadows from sticking to the casting surface
-    float bias = max(0.0008 * (1.0 - cosTheta), 0.00012);
-
+    // 5×5 PCF — average 25 samples for soft shadow edges
     vec2 texelSize = 1.0 / vec2(textureSize(uShadowMap, 0));
     float shadow = 0.0;
-
-    // 5x5 sample grid for soft shadows
     for (int x = -2; x <= 2; ++x)
     {
         for (int y = -2; y <= 2; ++y)
@@ -75,7 +125,6 @@ float calcShadow(vec4 lightSpacePos, vec3 N, vec3 L)
             shadow += (currentDepth - bias > closestDepth) ? 1.0 : 0.0;
         }
     }
-
     shadow /= 25.0;
     return 1.0 - shadow;
 }
@@ -223,7 +272,10 @@ void main()
     // Reduce lighting in shadow areas (but keep some ambient)
     float shadowDarken = mix(0.22, 1.0, shadowFactor);
 
-    vec3 ambient = albedo * 0.035;
+    // Higher ambient so faces pointing away from the primary light (e.g. the
+    // player-facing side when light comes from the BH direction) remain visible
+    // as dark metal rather than completely black.
+    vec3 ambient = albedo * 0.10;
 
     vec3 lit = ambient;
     lit += direct * shadowDarken;
@@ -238,6 +290,35 @@ void main()
     float bhDist = length(vWorldPos - uBHPos);
     float bhT = 1.0 - clamp(bhDist / 1600.0, 0.0, 1.0);
     lit += vec3(0.55, 0.18, 0.02) * bhT * 0.06 * mix(0.55, 1.0, shadowFactor);
+
+    // ── Week 9: Noise — animated circuit etch ────────────────────────────────
+    // Two-scale FBM carves thin bright energy-conduit lines into the surface.
+    // Coarse scale (×5 UV) sets vein topology; fine scale (×13) adds detail.
+    // A 0.01-wide smoothstep band isolates a crisp bright line from the field.
+    // Slow uTime drift (×0.025) makes energy appear to flow along conduits.
+    float nc      = fbm(vUV * 5.0 + uTime * 0.025);
+    float nf      = fbm(vUV * 13.0 + vec2(3.7, 8.1));
+    float band    = nc + nf * 0.28;
+    float circuit = smoothstep(0.490, 0.500, band) - smoothstep(0.500, 0.510, band);
+    lit += uGlowColor * circuit * (0.10 + uGlowStrength * 0.30) * shadowFactor;
+
+    // ── Week 9: Noise — disintegration dissolve ───────────────────────────────
+    // Fragments whose noise value falls below uDissolve are discarded outright,
+    // cutting physical holes through the platform mesh — visible from both sides.
+    // Fragments near the threshold glow orange-hot (burn edge) as tidal forces
+    // superheat the crumbling material.  uDissolve is set by the C++ scene:
+    //   0.00 = HomeRelay / StableRelay (pristine)
+    //   0.13 = DamagedRelay (pitted, partially crumbling)
+    //   0.22 = HazardRelay  (severely degraded, near-structural failure)
+    if (uDissolve > 0.001)
+    {
+        float dissolveN = fbm(vUV * 4.5);          // separate static field
+        if (dissolveN < uDissolve) discard;
+
+        // Burn edge: within 0.07 above the discard threshold, add incandescent glow
+        float burnEdge = smoothstep(uDissolve, uDissolve + 0.07, dissolveN);
+        lit += vec3(1.0, 0.28, 0.02) * (1.0 - burnEdge) * 3.0;
+    }
 
     FragColor = vec4(lit, uAlpha);
 }

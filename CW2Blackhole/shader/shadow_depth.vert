@@ -14,12 +14,16 @@
 // asteroids) is drawn through this shader into the depth-only FBO.
 
 layout(location = 0) in vec3 aPos;
+layout(location = 2) in vec2 aUV;     // Week 9: needed for dissolve discard
 
 uniform mat4 Model;
 uniform mat4 uLightSpaceMatrix;
 
+out vec2 vUV;
+
 void main()
 {
+    vUV = aUV;
     // Transform directly into light clip-space — no colour varyings needed
     gl_Position = uLightSpaceMatrix * Model * vec4(aPos, 1.0);
 }

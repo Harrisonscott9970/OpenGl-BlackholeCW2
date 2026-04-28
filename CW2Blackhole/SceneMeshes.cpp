@@ -718,9 +718,15 @@ void SceneBasic_Uniform::setupShadowMap()
     float borderCol[] = { 1.0f, 1.0f, 1.0f, 1.0f };
     glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, borderCol);
 
-    // Bilinear filtering on depth (hardware PCF if driver supports it)
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    // LearnOpenGL §Shadow Mapping: use GL_NEAREST for manual PCF.
+    // GL_LINEAR bilinearly blends 4 neighbouring depth texels before returning
+    // the value, so texture(...).r gives a blended depth that doesn't represent
+    // any real surface.  Comparing currentDepth against that interpolated value
+    // produces wrong shadow results near edges — shadows appear on lit inside
+    // faces and "rotate" with the camera.  GL_NEAREST returns the exact stored
+    // depth for each sample, which is what manual PCF requires.
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
     // ── Create depth-only FBO ─────────────────────────────────────────────────
     glGenFramebuffers(1, &shadowFBO);
@@ -754,8 +760,15 @@ void SceneBasic_Uniform::renderShadowPass()
     glViewport(0, 0, SHADOW_MAP_SIZE, SHADOW_MAP_SIZE);
     glClear(GL_DEPTH_BUFFER_BIT);
 
-    // Front-face culling during shadow pass eliminates "peter panning"
-    // (shadow offset from the caster surface)
+    // LearnOpenGL §Shadow Mapping — peter-panning fix: cull FRONT faces so only
+    // back-faces write into the depth map.  The platform is a closed hex prism
+    // (top cap + side walls + bottom cap).  GL_FRONT removes the top/near-side
+    // faces; the bottom cap and far-side walls remain.  Those back-face depths
+    // are always > the corresponding front-face depths, so the front-face shadow
+    // test (currentDepth < closestDepth) always passes cleanly — no self-shadow,
+    // no need for a large bias.  Beacon-tower spheres work the same way: the back
+    // hemisphere's depth is > any floor point below the tower, so floors/decks
+    // under the tower correctly receive the tower's shadow.
     glEnable(GL_CULL_FACE);
     glCullFace(GL_FRONT);
 
@@ -763,7 +776,8 @@ void SceneBasic_Uniform::renderShadowPass()
     shadowProg.setUniform("uLightSpaceMatrix", lightSpaceMatrix);
 
     // ── Draw all shadow-casting geometry ──────────────────────────────────────
-    // Main home platform (upper)
+    // Main home platform (upper) — pristine, no dissolve
+    shadowProg.setUniform("uDissolve", 0.0f);
     glm::mat4 upperModel =
         glm::translate(glm::mat4(1.f), glm::vec3(0, 0.8f, 145.0f)) *
         glm::scale(glm::mat4(1.f), glm::vec3(1.9f, 1.f, 1.9f));
@@ -778,9 +792,14 @@ void SceneBasic_Uniform::renderShadowPass()
     shadowProg.setUniform("Model", lowerModel);
     glDrawArrays(GL_TRIANGLES, 0, platVertCount);
 
-    // Satellite relay platforms
+    // Satellite relay platforms — dissolve matches main render pass (Week 9)
     for (const auto& zone : platformZones)
     {
+        float shadowDissolve = 0.0f;
+        if (zone.type == PlatformZoneType::DamagedRelay) shadowDissolve = 0.13f;
+        else if (zone.type == PlatformZoneType::HazardRelay) shadowDissolve = 0.22f;
+        shadowProg.setUniform("uDissolve", shadowDissolve);
+
         glm::mat4 satModel =
             glm::translate(glm::mat4(1.f), zone.position) *
             glm::scale(glm::mat4(1.f), glm::vec3(0.75f, 1.f, 0.75f));
@@ -792,6 +811,7 @@ void SceneBasic_Uniform::renderShadowPass()
     // These are the MOST VISIBLE shadow casters: at 18° light elevation a
     // beacon 4 units tall casts a shadow ~12 units long across the deck.
     // The sphere VAO is reused as a simple stand-in for the beacon body.
+    shadowProg.setUniform("uDissolve", 0.0f);   // beacons never dissolve
     glBindVertexArray(sphereVAO);
     for (const auto& beacon : beaconTowers)
     {
