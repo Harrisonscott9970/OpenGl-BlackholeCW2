@@ -33,7 +33,10 @@ These systems are tied together with HUD overlays, menu presentation, a tether r
 
 The screenshots below show the project's key presentation and gameplay systems in context.
 
-### Main Gameplay View
+### View of CW1 scene
+<img width="794" height="546" alt="image" src="https://github.com/user-attachments/assets/10752ab8-1b9c-4bf7-896b-8054cdb71a56" />
+
+### Main Gameplay View of CW2
 [Main gameplay view - black hole, accretion disk, cockpit HUD, and environmental scene]<img width="799" height="605" alt="image" src="https://github.com/user-attachments/assets/deb86fb5-7042-4412-8491-53801d5fc5c0" />
 
 ### EVA Tether Recovery Minigame
